@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LEVIAFIT - Ropa Deportiva</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      color: white;
+      text-align: center;
+      background: #000;
+    }
+
+    /* Fondo deportivo con desenfoque leve */
+    #fondoDeportivo {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url('https://images.unsplash.com/photo-1526406915891-80f8a213b02d?auto=format&fit=crop&w=1470&q=80') no-repeat center center fixed;
+      background-size: cover;
+      filter: blur(2px); /* poco desenfoque */
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    #contenido {
+      position: relative;
+      min-height: 100vh;
+      padding-bottom: 100px;
+      background: rgba(0,0,0,0.3); /* para que texto contraste */
+      backdrop-filter: blur(1.5px); /* desenfoque suave en todo el contenido */
+      z-index: 0;
+    }
+
+    #contenido.deshabilitado {
+      filter: blur(5px);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    header {
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+    h1 {
+      margin: 0.5rem 0;
+    }
+    p {
+      font-size: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .filters {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+    .filter-btn {
+      padding: 0.7rem 1.2rem;
+      background-color: white;
+      color: black;
+      border-radius: 20px;
+      cursor: pointer;
+      border: none;
+      font-weight: bold;
+    }
+    .search-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+    .search-container input {
+      padding: 0.5rem;
+      border-radius: 20px 0 0 20px;
+      border: none;
+      width: 200px;
+    }
+    .search-container button {
+      padding: 0.5rem 1rem;
+      border: none;
+      background-color: white;
+      color: black;
+      border-radius: 0 20px 20px 0;
+      cursor: pointer;
+    }
+    .products {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+    .product {
+      background-color: rgba(0,0,0,0.7);
+      padding: 1rem;
+      border-radius: 15px;
+      width: 200px;
+      color: white;
+    }
+    .product img {
+      width: 100%;
+      border-radius: 10px;
+    }
+    .product button {
+      margin-top: 0.5rem;
+      background-color: #00ff90;
+      border: none;
+      padding: 0.5rem;
+      width: 100%;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #formularioCompra {
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -20%);
+      background: white;
+      color: black;
+      padding: 1.5rem;
+      border-radius: 10px;
+      display: none;
+      z-index: 10000;
+      width: 300px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+      pointer-events: auto;
+    }
+    #formularioCompra input,
+    #formularioCompra select {
+      display: block;
+      margin: 1rem auto;
+      padding: 0.5rem;
+      width: 80%;
+      font-size: 1rem;
+    }
+    .close-form {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: red;
+      font-weight: bold;
+    }
+
+    /* Chatbot flotante */
+    #chatbot {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      text-align: center;
+      font-size: 2.5rem;
+      cursor: pointer;
+      z-index: 11000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      transition: transform 0.3s ease;
+    }
+    #chatbot:hover {
+      transform: scale(1.1);
+    }
+    #chat-window {
+      display: none;
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 320px;
+      max-height: 400px;
+      background: white;
+      color: black;
+      border-radius: 10px;
+      padding: 1rem;
+      z-index: 11000;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    #chat-window .cerrar-chat {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      font-weight: bold;
+      font-size: 1.3rem;
+      cursor: pointer;
+      color: red;
+      user-select: none;
+    }
+    #chat-mensajes {
+      flex-grow: 1;
+      overflow-y: auto;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      text-align: left;
+      padding-right: 5px;
+    }
+    #chat-mensajes p {
+      margin: 0.3rem 0;
+      padding: 0.5rem 0.7rem;
+      border-radius: 8px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+    #chat-mensajes p.user {
+      background: #d1f0ff;
+      align-self: flex-end;
+    }
+    #chat-mensajes p.bot {
+      background: #e1e1e1;
+      color: #000;
+      align-self: flex-start;
+    }
+    #chat-window input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 80%;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+    #chat-window button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      margin-left: 0.5rem;
+      border-radius: 10px;
+      border: none;
+      background-color: #00ff90;
+      cursor: pointer;
+      color: black;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="fondoDeportivo"></div>
+
+  <div id="contenido">
+    <header>
+      <h1>LEVIAFIT</h1>
+      <p>Viste con propósito, entrena con pasión. ¡Bienvenido a la mejor tienda deportiva!</p>
+    </header>
+
+    <div class="search-container">
+      <input type="text" id="buscador" placeholder="Buscar producto...">
+      <button onclick="buscarProducto()">🔍</button>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn" onclick="filtrar('hombre')">HOMBRES</button>
+      <button class="filter-btn" onclick="filtrar('mujer')">MUJERES</button>
+    </div>
+
+    <div class="products" id="productos">
+      <!-- Productos se insertarán aquí -->
+    </div>
+  </div>
+
+  <div id="formularioCompra">
+    <div class="close-form" onclick="cerrarFormulario()">✖</div>
+    <h3>Completa tus datos</h3>
+    <input type="text" id="nombre" placeholder="Nombre completo" required />
+    <input type="text" id="celular" placeholder="Número de celular" required />
+    <input type="text" id="ubicacion" placeholder="Ubicación actual" required />
+    <label for="talla">Elige la talla:</label>
+    <select id="talla" required>
+      <option value="" disabled selected>Selecciona una talla</option>
+      <option value="S">S</option>
+      <option value="M">M</option>
+      <option value="L">L</option>
+      <option value="XL">XL</option>
+    </select>
+    <button onclick="enviarWhatsApp()">Confirmar compra</button>
+  </div>
+
+  <div id="chatbot" title="Chat con LEVIAFIT">😊</div>
+  <div id="chat-window">
+    <div class="cerrar-chat" onclick="cerrarChat()">✖</div>
+    <div id="chat-mensajes"></div>
+    <div style="display:flex;">
+      <input type="text" id="mensajeUsuario" placeholder="Escribe tu pregunta..." />
+      <button onclick="responder()">Enviar</button>
+    </div>
+  </div>
+
+<script>
+const numeroWhatsApp = '59169853189';
+let productoSeleccionado = '';
+
+const productos = [
+  { genero: 'hombre', nombre: 'POLERA DEPORTIVA LEVIAGOT', precio: 100 },
+  { genero: 'hombre', nombre: 'CORTO DEPORTIVO LEVIAGOT', precio: 100 },
+  { genero: 'hombre', nombre: 'BUSO BAGGY OVERZIDE', precio: 100 },
+  { genero: 'hombre', nombre: 'CONJUNTO LEVIAFREE', precio: 100 },
+  { genero: 'mujer', nombre: 'POLERA DEPORTIVA LEVIAGOT', precio: 100 },
+  { genero: 'mujer', nombre: 'CORTO DEPORTIVO LEVIAGOT', precio: 100 },
+  { genero: 'mujer', nombre: 'BUSO BAGGY OVERZIDE', precio: 100 },
+  { genero: 'mujer', nombre: 'CONJUNTO LEVIAFREE', precio: 100 },
+];
+
+function filtrar(genero) {
+  const contenedor = document.getElementById('productos');
+  contenedor.innerHTML = '';
+  productos.filter(p => p.genero === genero).forEach(prod => {
+    const div = document.createElement('div');
+    div.className = 'product';
+    div.innerHTML = `
+      <img src="https://via.placeholder.com/200x200?text=${encodeURIComponent(prod.nombre)}" alt="${prod.nombre}">
+      <h3>${prod.nombre}</h3>
+      <p>Precio: ${prod.precio} Bs</p>
+      <button onclick="mostrarFormulario('${prod.nombre}')">Comprar</button>
+    `;
+    contenedor.appendChild(div);
+  });
+}
+
+function buscarProducto() {
+  const texto = document.getElementById('buscador').value.toLowerCase();
+  const resultados = productos.filter(p => p.nombre.toLowerCase().includes(texto));
+  const contenedor = document.getElementById('productos');
+  contenedor.innerHTML = '';
+  resultados.forEach(prod => {
+    const div = document.createElement('div');
+    div.className = 'product';
+    div.innerHTML = `
+      <img src="https://via.placeholder.com/200x200?text=${encodeURIComponent(prod.nombre)}" alt="${prod.nombre}">
+      <h3>${prod.nombre}</h3>
+      <p>Precio: ${prod.precio} Bs</p>
+      <button onclick="mostrarFormulario('${prod.nombre}')">Comprar</button>
+    `;
+    contenedor.appendChild(div);
+  });
+}
+
+function mostrarFormulario(producto) {
+  productoSeleccionado = producto;
+  document.getElementById('formularioCompra').style.display = 'block';
+  document.getElementById('contenido').classList.add('deshabilitado');
+}
+
+function cerrarFormulario() {
+  document.getElementById('formularioCompra').style.display = 'none';
+  document.getElementById('contenido').classList.remove('deshabilitado');
+}
+
+function enviarWhatsApp() {
+  const nombre = document.getElementById('nombre').value.trim();
+  const celular = document.getElementById('celular').value.trim();
+  const ubicacion = document.getElementById('ubicacion').value.trim();
+  const talla = document.getElementById('talla').value;
+  if (!nombre || !celular || !ubicacion || !talla) {
+    alert('Por favor, completa todos los campos y selecciona la talla.');
+    return;
+  }
+  const mensaje = `¡Bienvenido a LEVIAFIT! Estás adquiriendo una prenda deportiva de la mejor calidad.\n\nProducto: ${productoSeleccionado}\nTalla: ${talla}\nNombre: ${nombre}\nCelular: ${celular}\nUbicación: ${ubicacion}`;
+  const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+  window.open(url, '_blank');
+  cerrarFormulario();
+}
+
+// Chatbot funcionalidad simple
+const chatBot = document.getElementById('chatbot');
+const chatWindow = document.getElementById('chat-window');
+const chatMensajes = document.getElementById('chat-mensajes');
+const inputMensaje = document.getElementById('mensajeUsuario');
+
+chatBot.addEventListener('click', () => {
+  if (chatWindow.style.display === 'flex') {
+    chatWindow.style.display = 'none';
+  } else {
+    chatWindow.style.display = 'flex';
+    inputMensaje.focus();
+  }
+});
+
+function cerrarChat() {
+  chatWindow.style.display = 'none';
+}
+
+function responder() {
+  const userInput = inputMensaje.value.trim();
+  if (!userInput) return;
+
+  // Mostrar mensaje usuario
+  const pUser = document.createElement('p');
+  pUser.classList.add('user');
+  pUser.textContent = userInput;
+  chatMensajes.appendChild(pUser);
+
+  // Respuestas simples predefinidas
+  const respuestas = {
+    'precio': 'Nuestros productos tienen un precio fijo de 100 Bs.',
+    'tallas': 'Disponemos de tallas S, M, L y XL para todos los productos.',
+    'envío': 'Realizamos envíos a toda Bolivia con servicio rápido y seguro.',
+    'pago': 'Aceptamos pagos en efectivo y transferencia bancaria.',
+    'horarios': 'Nuestro horario de atención es de 9:00 a 20:00 de lunes a sábado.',
+  };
+
+  // Buscar palabra clave en la pregunta
+  let respuesta = 'Disculpa, no entendí tu pregunta. Por favor intenta con otra consulta.';
+  const textoMinuscula = userInput.toLowerCase();
+  for (const clave in respuestas) {
+    if (textoMinuscula.includes(clave)) {
+      respuesta = respuestas[clave];
+      break;
+    }
+  }
+
+  // Mostrar respuesta chatbot
+  const pBot = document.createElement('p');
+  pBot.classList.add('bot');
+  pBot.textContent = respuesta;
+  chatMensajes.appendChild(pBot);
+
+  // Scroll al final
+  chatMensajes.scrollTop = chatMensajes.scrollHeight;
+
+  inputMensaje.value = '';
+}
+
+// Mostrar productos hombres por defecto al cargar la página
+window.onload = () => {
+  filtrar('hombre');
+};
+</script>
+</body>
+</html>
